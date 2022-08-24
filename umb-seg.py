@@ -9,32 +9,20 @@ from ipaddress import IPv4Network
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-VMANAGE = 'vmanage.onesase.com'
-USER = 'rshoemak'
-PASS = 'C1sco12345!'
-ROUTER = '1.3.9.1'
-UMBORGID = '6358063'
-UMBMGMTKEY = 'f2aeb2a241714916a798d0f1a296400c'
-UMBMGMTSEC = 'df721d3593454f3294aab626dc7ef759'
-UMBDEVKEY = '3b8a0835ae4e44428f41b654efde198b'
-UMBDEVSEC = '4e8094dca7f446f598db169f8fa33b0f'
+import helper
 
-VPNLIST = [{'name':'Corporate','vpn':'10','webpolicy':'Corporate-Segment-Web-Policy'},
-           {'name':'Guest','vpn':'20','webpolicy':'Guest-Segment-Web-Policy'},
-           {'name':'IoT','vpn':'30','webpolicy':'IOT-Segment-Web-Policy'}]
-
-umbCredStr = UMBMGMTKEY + ":" + UMBMGMTSEC
+umbCredStr = helper.UMBMGMTKEY + ":" + helper.UMBMGMTSEC
 umbCredBytes = umbCredStr.encode("ascii")
 umbCredEnc = base64.b64encode(umbCredBytes)
 umbCredDec = umbCredEnc.decode("ascii")
 
-umbDevStr = UMBDEVKEY + ":" + UMBDEVSEC
+umbDevStr = helper.UMBDEVKEY + ":" + helper.UMBDEVSEC
 umbDevBytes = umbDevStr.encode("ascii")
 umbDevEnc = base64.b64encode(umbDevBytes)
 umbDevDec = umbDevEnc.decode("ascii")
 
-vmanage_url_base = 'https://{vmanage}/dataservice'.format(vmanage=VMANAGE)
-umb_url_base = 'https://management.api.umbrella.com/v1/organizations/{org_id}'.format(org_id=UMBORGID)
+vmanage_url_base = 'https://{vmanage}/dataservice'.format(vmanage=helper.VMANAGE)
+umb_url_base = 'https://management.api.umbrella.com/v1/organizations/{org_id}'.format(org_id=helper.UMBORGID)
 
 class IntInfo():
     def __init__(self, name, ip, mask):
@@ -45,9 +33,9 @@ class IntInfo():
 
 def get_session_id():
 
-    url = 'https://{vmanage}/j_security_check'.format(vmanage=VMANAGE)
+    url = 'https://{vmanage}/j_security_check'.format(vmanage=helper.VMANAGE)
 
-    payload = {'j_username': USER, 'j_password': PASS}
+    payload = {'j_username': helper.USER, 'j_password': helper.PASS}
     
     resp = requests.post(url,
                          data=payload,
@@ -78,7 +66,7 @@ def get_umb_sig_name(jsessionid, token):
 
     sig_tunnel_list = []
 
-    url = vmanage_url_base + '/device/sig/umbrella/tunnels?deviceId={router}'.format(router=ROUTER)
+    url = vmanage_url_base + '/device/sig/umbrella/tunnels?deviceId={router}'.format(router=helper.ROUTER)
 
     headers = {'Content-Type': 'application/json',
                'Accept': 'application/json',
@@ -96,7 +84,7 @@ def get_umb_sig_name(jsessionid, token):
         
         try:
             sig_tunnel_name = tunnel["tunnel-name"]
-            print("Found SIG Tunnel {tunnel} for router {router}\n".format(tunnel=sig_tunnel_name, router=ROUTER))
+            print("Found SIG Tunnel {tunnel} for router {router}\n".format(tunnel=sig_tunnel_name, router=helper.ROUTER))
             sig_tunnel_list.append(sig_tunnel_name)
         except:
             continue
@@ -136,7 +124,7 @@ def get_umb_sig_id(umb_sig_tunnel_name):
 
 def get_int_info(jsessionid, token, vpnid):
 
-    url = vmanage_url_base + '/device/interface?deviceId={router}&vpn-id={vpn}'.format(router=ROUTER, vpn=vpnid)
+    url = vmanage_url_base + '/device/interface?deviceId={router}&vpn-id={vpn}'.format(router=helper.ROUTER, vpn=vpnid)
 
     headers = {'Content-Type': 'application/json',
                'Accept': 'application/json',
@@ -247,7 +235,7 @@ if __name__ == '__main__':
     jsessionid = get_session_id()
     token = get_vmanage_token(jsessionid)
 
-    print("\n *** Looking for SIG Tunnels for router {router} ***\n".format(router=ROUTER))
+    print("\n *** Looking for SIG Tunnels for router {router} ***\n".format(router=helper.ROUTER))
     umb_sig_tunnel_name = get_umb_sig_name(jsessionid, token)
     #print('Looking for info on these tunnels')
     #print(umb_sig_tunnel_name)
@@ -257,7 +245,7 @@ if __name__ == '__main__':
     print('\n *** Found Tunnel Ids *** \n')
     print(umb_sig_id)
 
-    for each in VPNLIST:
+    for each in helper.VPNLIST:
         vpnid = each['vpn']
         print(vpnid)
 
